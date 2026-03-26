@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "Bash(python3 .claude/skills/*)": "allow",
+    "Bash(find .claude/*)": "allow",
+    "Read(.claude/*)": "allow"
+  }
+}
