@@ -203,13 +203,14 @@ def cmd_mark_churned(state, args):
     if not skill:
         print(f"Error: skill '{args.name}' not found.", file=sys.stderr)
         return 1
+    old_phase = skill["phase"]
     skill["phase"] = "CHURNED"
     skill["churned_at"] = now_iso()
     skill["churn_reason"] = args.reason
     state["history"].append({
         "timestamp": now_iso(),
         "skill": args.name,
-        "from": skill["phase"],
+        "from": old_phase,
         "to": "CHURNED",
         "reason": args.reason,
     })
