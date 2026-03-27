@@ -19,7 +19,7 @@ if [[ -z "$PROJECT_DIR" || "$PROJECT_DIR" == "$HOME" || "$PROJECT_DIR" == "/" ]]
 fi
 
 SCANNED_FILE="$HOME/.claude/skill-lifecycle-scanned-projects.json"
-LIFECYCLE_SCRIPTS="$(find "$HOME/.claude/skills/skill-lifecycle/scripts" ".claude/skills/skill-lifecycle/scripts" -name lifecycle_state.py -print -quit 2>/dev/null || true)"
+LIFECYCLE_SCRIPTS="$(find "$HOME/.claude/skills/skill-lifecycle/scripts" -name lifecycle_state.py -print -quit 2>/dev/null || true)"
 
 # If framework isn't installed, skip silently
 if [[ -z "$LIFECYCLE_SCRIPTS" ]]; then
