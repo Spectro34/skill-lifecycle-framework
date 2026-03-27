@@ -78,14 +78,23 @@ RECOMMENDED → BUILDING → TESTING → DEPLOYED → MONITORING
 
 1. **Invoke `/evaluate-skills`** via the Skill tool. This runs the full project scan and produces recommendations with an `<!-- EVALUATE-SKILLS-OUTPUT -->` block.
 
-2. **Run gap analysis**:
+2. **Run gap analysis**. First, extract the recommendations from the evaluate-skills output into a JSON array. Each item needs: `name`, `priority`, `type`, `why`, `steps`, `tools`. Save it to a temp file, then pipe it in:
    ```bash
-   python3 "$LIFECYCLE_SCRIPTS/gap_analysis.py" \
+   # Write the recommendations JSON array to a temp file
+   cat > /tmp/skill-recs.json << 'RECS_EOF'
+   [
+     {"name": "skill-name", "priority": "High", "type": "Task automation", "why": "reason from evaluate-skills", "steps": "step1, step2", "tools": "tool1, tool2"},
+     ...
+   ]
+   RECS_EOF
+
+   # Pipe into gap analysis
+   cat /tmp/skill-recs.json | python3 "$LIFECYCLE_SCRIPTS/gap_analysis.py" \
      --skills-dirs ~/.claude/skills .claude/skills \
      --plugins-dir ~/.claude/plugins/marketplaces \
      --history ~/.claude/history.jsonl
    ```
-   This cross-references recommendations against installed skills (deduplicates) and user behavior in history.jsonl (re-ranks by activity match). It outputs a JSON gap report.
+   This cross-references recommendations against installed skills (deduplicates) and user behavior in history.jsonl (re-ranks by activity match). It outputs a JSON gap report to stdout.
 
 3. **Present the enriched gap table** to the user:
    ```
