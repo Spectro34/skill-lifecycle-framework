@@ -3,5 +3,31 @@
     "Bash(python3 .claude/skills/*)": "allow",
     "Bash(find .claude/*)": "allow",
     "Read(.claude/*)": "allow"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/on-project-open.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/log-skill-usage.sh",
+            "timeout": 3,
+            "async": true
+          }
+        ]
+      }
+    ]
   }
 }

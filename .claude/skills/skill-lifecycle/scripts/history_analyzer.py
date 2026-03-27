@@ -43,22 +43,62 @@ def scan_skill_names(skills_dir):
     return names
 
 
+def read_invocation_log(log_path, skill_names):
+    """Read the hook-generated skill-invocation-log.jsonl for hard usage data."""
+    invocations = Counter()
+    last_used = {}
+    path = Path(log_path).expanduser()
+    if not path.exists():
+        return invocations, last_used
+    try:
+        with open(path) as f:
+            for line in f:
+                try:
+                    entry = json.loads(line.strip())
+                except (json.JSONDecodeError, ValueError):
+                    continue
+                skill = entry.get("skill", "")
+                ts = entry.get("timestamp", "")
+                if skill in skill_names:
+                    invocations[skill] += 1
+                    if ts and (skill not in last_used or ts > last_used[skill]):
+                        last_used[skill] = ts
+    except OSError:
+        pass
+    return invocations, last_used
+
+
 def analyze(history_path, skill_names):
-    """Parse history.jsonl and count skill invocations."""
+    """Parse history.jsonl + invocation log and count skill invocations."""
     invocations = Counter()
     last_used = {}
     keyword_hits = defaultdict(Counter)  # skill -> session keywords
 
+    # Primary source: hook-generated invocation log (hard data)
+    log_path = Path.home() / ".claude" / "skill-invocation-log.jsonl"
+    log_invocations, log_last_used = read_invocation_log(log_path, set(skill_names))
+    invocations.update(log_invocations)
+    last_used.update(log_last_used)
+
+    # Secondary source: history.jsonl (heuristic keyword matching)
     path = Path(history_path).expanduser()
     if not path.exists():
-        return {"error": f"History file not found: {history_path}"}
+        if not invocations:
+            return {"error": f"No usage data found (history: {history_path}, log: {log_path})"}
+        # We have invocation log data even without history — continue
+        pass
 
     # Build regex patterns for direct invocations
     patterns = {}
     for name in skill_names:
         patterns[name] = re.compile(rf"(?:^|[\s/])(?:{re.escape(name)})\b", re.IGNORECASE)
 
+    if not path.exists():
+        path = None  # skip history file reading
+
     try:
+        if path is None:
+            raise OSError("no history file")
         with open(path) as f:
             for line in f:
                 try:
